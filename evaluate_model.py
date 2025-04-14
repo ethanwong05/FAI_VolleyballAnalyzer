@@ -93,11 +93,28 @@ def evaluate_model(model_path, test_loader, device=None, tolerance=0.25):
             consistency_matches += 1
     soft_consistency = (consistency_matches / filtered_total) * 100 if filtered_total > 0 else 0.0
 
+    # Group-Aligned Rally Consistency
+    rally_winner = np.argmax(all_rally_probs, axis=1)
+    group_implied_winner = np.array([group_to_rally[group_classes[t]] for t in all_group_targets])
+    rally_group_matches = (rally_winner == group_implied_winner).sum()
+    group_aligned_consistency = (rally_group_matches / total_clips) * 100 if total_clips > 0 else 0.0
+
+    # Rally Probability Averages
+    heuristic_avg = np.mean(all_heuristic_probs, axis=0)
+    nn_avg = np.mean(all_rally_probs, axis=0)
+    gt_avg = np.mean(np.eye(2)[group_implied_winner], axis=0)
+
     print(f"Evaluation on Test Set ({len(all_group_targets)} samples):")
     print(f"Person Action - Accuracy: {person_acc:.2f}%, Per-Class Accuracy: {avg_person_class_acc:.2f}%")
     print(f"Group Activity - Accuracy: {group_acc:.2f}%, Per-Class Accuracy: {avg_group_class_acc:.2f}%")
     print(f"\nRally Prediction - Filtered Soft Consistency Score: {soft_consistency:.2f}%")
     print(f"  (Percentage of {filtered_total} clips (excluding heuristic [0, 1] or [1, 0]) where max difference is less than {tolerance})")
+    print(f"Rally Prediction - Group-Aligned Consistency Score: {group_aligned_consistency:.2f}%")
+    print(f"  (Percentage of clips where rally winner matches group activity-implied winner)")
+    print(f"\nRally Probability Averages:")
+    print(f"Heuristic - Left: {heuristic_avg[0]:.3f}, Right: {heuristic_avg[1]:.3f}")
+    print(f"Neural Net - Left: {nn_avg[0]:.3f}, Right: {nn_avg[1]:.3f}")
+    print(f"Ground Truth - Left: {gt_avg[0]:.3f}, Right: {gt_avg[1]:.3f}")
 
     metrics = {
         'person_acc': person_acc,
@@ -105,9 +122,23 @@ def evaluate_model(model_path, test_loader, device=None, tolerance=0.25):
         'avg_person_class_acc': avg_person_class_acc,
         'avg_group_class_acc': avg_group_class_acc,
         'soft_consistency': soft_consistency,
+        'group_aligned_consistency': group_aligned_consistency,
         'person_class_accs': person_class_accs,
         'group_class_accs': group_class_accs,
+        'heuristic_avg_left': heuristic_avg[0],
+        'heuristic_avg_right': heuristic_avg[1],
+        'nn_avg_left': nn_avg[0],
+        'nn_avg_right': nn_avg[1],
+        'gt_avg_left': gt_avg[0],
+        'gt_avg_right': gt_avg[1]
     }
+
+    heuristic_winner_acc = np.mean(np.argmax(all_heuristic_probs, axis=1) == group_implied_winner) * 100
+    nn_winner_acc = np.mean(np.argmax(all_rally_probs, axis=1) == group_implied_winner) * 100
+    print(f"\nRally Winner Accuracy:")
+    print(f"Heuristic: {heuristic_winner_acc:.2f}%")
+    print(f"Neural Net: {nn_winner_acc:.2f}%")
+    metrics.update({'heuristic_winner_acc': heuristic_winner_acc, 'nn_winner_acc': nn_winner_acc})
 
     return metrics
 
