@@ -63,3 +63,64 @@ def train_model(rally_predictor, train_loader, val_loader, num_epochs=50, start_
     
     # Gradient clipping threshold
     max_grad_norm = 1.0
+
+    # Load checkpoint if continuing training
+    checkpoint_path = Path(f"output/checkpoints/checkpoint_epoch_{start_epoch-1}_train_alexnet.pth")
+    if checkpoint_path.exists():
+        print(f"Loading checkpoint from {checkpoint_path}")
+        checkpoint = torch.load(checkpoint_path, map_location=device)
+        
+        # Load model state
+        state_dict = checkpoint['rally_predictor_state_dict']
+        new_state_dict = {}
+        for key, value in state_dict.items():
+            if isinstance(rally_predictor, nn.DataParallel) and key.startswith("module."):
+                new_key = key
+                new_state_dict[new_key] = value
+            elif not isinstance(rally_predictor, nn.DataParallel) and key.startswith("module."):
+                new_key = key[len("module."):]
+                print(f"Stripping 'module.' prefix: {key} -> {new_key}")
+                new_state_dict[new_key] = value
+            elif isinstance(rally_predictor, nn.DataParallel) and not key.startswith("module."):
+                new_key = "module." + key
+                print(f"Adding 'module.' prefix: {key} -> {new_key}")
+                new_state_dict[new_key] = value
+            else:
+                new_state_dict[key] = value
+        
+        if isinstance(rally_predictor, nn.DataParallel):
+            print("Loading state_dict into rally_predictor.module with strict=False")
+            rally_predictor.module.load_state_dict(new_state_dict, strict=False)
+        else:
+            print("Loading state_dict into rally_predictor with strict=False")
+            rally_predictor.load_state_dict(new_state_dict, strict=False)
+        
+        # Load optimizer state
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        
+        # Load scheduler state if available
+        if 'scheduler_state_dict' in checkpoint:
+            try:
+                scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+                print(f"Loaded scheduler state from checkpoint")
+            except Exception as e:
+                print(f"Couldn't load scheduler state, advancing scheduler manually: {e}")
+                for _ in range(start_epoch - 1):
+                    scheduler.step()
+        else:
+            print(f"No scheduler state in checkpoint, advancing scheduler manually")
+            for _ in range(start_epoch - 1):
+                scheduler.step()
+                
+        # Set best_val_group_acc based on previous best from epoch 20 validation
+        print(f"Using best validation accuracy: {best_val_group_acc}")
+                
+        print(f"Loaded checkpoint from epoch {checkpoint['epoch']}")
+    else:
+        print(f"Checkpoint not found at {checkpoint_path}. Starting from scratch.")
+        # If no checkpoint but still starting from later epoch, advance scheduler
+        for _ in range(start_epoch - 1):
+            scheduler.step()
+        print(f"Advanced scheduler to epoch {start_epoch}")
+    
+    
