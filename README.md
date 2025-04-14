@@ -1,8 +1,10 @@
 # Volleyball Activity Recognition with Rally Prediction
 
 ## Overview
-
-This project, developed for CS5100 Foundations of AI, implements a deep learning system for volleyball activity recognition and rally prediction. It analyzes frames of video clips from the Volleyball Dataset to predict individual player actions (e.g., spiking, blocking), group activities (e.g., left-pass, right-spike), and rally outcomes (e.g., which team is likely to win). The model leverages a pre-trained AlexNet backbone, LSTM for temporal modeling, self-attention for group interactions, and a graph convolutional network (GCN) for spatial relationships. By using computer vision and neural network training, the system provides insights into play dynamics through action classification, activity recognition, and rally probability estimation.
+ 
+This project implements a deep learning system for volleyball activity recognition using PyTorch. It predicts individual player actions (e.g., spiking, blocking), group activities (e.g., left-pass, right-spike), and rally outcomes (e.g., which team is likely to win the rally) from video clips. The system leverages a combination of a pre-trained AlexNet backbone, LSTM for temporal modeling, self-attention for group interactions, and a graph convolutional network (GCN) for spatial relationships.
+ 
+The project is designed to process the Volleyball Dataset, which contains annotated frames from video clips of volleyball matches. It supports training, evaluation, and visualization modes, with detailed metrics for performance analysis.
 
 ## Features
 
