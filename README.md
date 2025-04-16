@@ -27,6 +27,11 @@ The project is designed to process the Volleyball Dataset, which contains annota
   - Reports per-class accuracy for actions and group activities.
   - Includes specialized metrics like filtered soft consistency and group-aligned consistency for rally predictions.
 
+## Visualizations
+![image](https://github.com/user-attachments/assets/4d0cb168-5e83-45ec-b8a6-751d15ac9256)
+![image](https://github.com/user-attachments/assets/55b1d471-bc5b-4a83-b1bd-83f56a52d0de)
+
+
 ## Document Overview
 
 - `main.py`: Entry point for running the project in train, evaluate, or visualize modes.
