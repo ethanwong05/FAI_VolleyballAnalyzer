@@ -38,7 +38,7 @@ def main():
     from dataset import VolleyballDataset, transform, test_transform, TRAIN_VIDEOS, VAL_VIDEOS, TEST_VIDEOS
     from model import RallyPredictor
     from train import train_model
-    from evaluate import evaluate_model
+    from evaluate_model import evaluate_model
     from infer import visualize_predictions
     import torch.utils.data as data
     
