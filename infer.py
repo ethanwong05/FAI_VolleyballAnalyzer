@@ -32,8 +32,8 @@ def visualize_predictions(model_path, dataset, sample_indices=None, num_samples=
     model.eval()
 
     # Get class mappings
-    action_classes = {v: k for k, v in dataset.action_classes.items()}
-    group_classes = {v: k for k, v in dataset.group_classes.items()}
+    action_classes = {v: k for k, v in dataset.dataset.action_classes.items()}
+    group_classes = {v: k for k, v in dataset.dataset.group_classes.items()}
     action_colors = {
         'waiting': (255, 255, 0),     # yellow
         'setting': (0, 255, 0),       # green
@@ -46,16 +46,19 @@ def visualize_predictions(model_path, dataset, sample_indices=None, num_samples=
         'standing': (128, 128, 128)   # gray  
     }
 
+    # Get the underlying dataset from the DataLoader
+    volleyball_dataset = dataset.dataset
+
     # Select samples
     if sample_indices is None:
         # Get random samples
         import random
-        total_samples = len(dataset)
+        total_samples = len(volleyball_dataset)
         sample_indices = random.sample(range(total_samples), min(num_samples, total_samples))
-    
+
     # Limit to num_samples
     sample_indices = sample_indices[:num_samples]
-    samples = [dataset[idx] for idx in sample_indices if idx < len(dataset)]
+    samples = [volleyball_dataset[idx] for idx in sample_indices if idx < len(volleyball_dataset)]
 
     # Process each sample
     for idx, sample in enumerate(samples):
